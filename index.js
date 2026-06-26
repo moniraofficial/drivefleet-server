@@ -326,6 +326,30 @@ async function run() {
       }
     });
 
+        // বুকিং লিস্ট রিড করা ( verifyToken মিডলওয়্যার )
+    app.get('/api/bookings', verifyToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+        
+       
+        if (req.user.email !== email) {
+          return res.status(403).send({ message: "Forbidden access: You can only view your own bookings." });
+        }
+
+        let query = {};
+        if (email) {
+          query = { userEmail: email }; 
+        }
+
+        const result = await bookingCollection.find(query).sort({ bookedAt: -1 }).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        res.status(500).send({ message: "Error fetching booking data", error });
+      }
+    });
+
+  
 
  
 
