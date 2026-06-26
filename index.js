@@ -183,7 +183,23 @@ async function run() {
       .send({ success: true, message: "Logged out and cookie cleared! 🧹" });
     });
 
+    // গাড়ি অ্যাড করার এন্ডপয়েন্ট
+    app.post('/api/cars', async (req, res) => {
+      try {
+        const carData = req.body;
+        if (!carData.booking_count) {
+          carData.booking_count = 0;
+        }
+        const result = await carCollection.insertOne(carData);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Error inserting car:", error);
+        res.status(500).send({ message: "Error inserting new car data", error });
+      }
+    });
+
     
+
 
   } catch (error) {
     console.error("MongoDB Connection Error:", error);
