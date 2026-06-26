@@ -349,7 +349,28 @@ async function run() {
       }
     });
 
-  
+    //  গাড়ি ডিলিট করার এন্ডপয়েন্ট
+    app.delete('/api/cars/:id', async (req, res) => {
+      try {
+        const carId = req.params.id;
+
+        if (!ObjectId.isValid(carId)) {
+          return res.status(400).send({ message: "Invalid Car ID format" });
+        }
+
+        const query = { _id: new ObjectId(carId) };
+        const result = await carCollection.deleteOne(query);
+
+        if (result.deletedCount === 1) {
+          res.status(200).send({ message: "Car deleted successfully from MongoDB!" });
+        } else {
+          res.status(404).send({ message: "Car not found or already deleted" });
+        }
+      } catch (error) {
+        console.error("Error deleting car:", error);
+        res.status(500).send({ message: "Error deleting car data", error });
+      }
+    });
 
  
 
