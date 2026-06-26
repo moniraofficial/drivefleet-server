@@ -199,7 +199,65 @@ async function run() {
     });
 
     
+    // 🔍 Search (by Car Name) and Filter (by Type) + Optional Sort
+   
+    app.get('/api/cars', async (req, res) => {
+      try {
+        const { email, ownerEmail, search, type, sortBy } = req.query;
+        let query = {};
+        
+        const targetEmail = email || ownerEmail;
+        if (targetEmail) {
+          query.ownerEmail = targetEmail;
+        }
 
+        if (search) {
+          query.carName = { $regex: search, $options: "i" };
+        }
+
+        if (type && type !== "") {
+          query.type = type;
+        }
+
+        //  বোনাস ফিচার: প্রাইজ সর্টিং অপশন (যদি ফ্রন্টএন্ডে প্রয়োজন হয়)
+        let sortOption = { _id: -1 };
+        if (sortBy === "priceAsc") sortOption = { price: 1 };
+        if (sortBy === "priceDesc") sortOption = { price: -1 };
+
+        const cursor = carCollection.find(query).sort(sortOption);
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Error fetching all cars", error });
+      }
+    });
+
+    // সিঙ্গেল গাড়ির ডাটা রিড করা
+    app.get('/api/cars/:id', async (req, res) => {
+      try {
+        const carId = req.params.id; 
+        let query = {};
+
+        if (ObjectId.isValid(carId)) {
+          query = { _id: new ObjectId(carId) };
+        } else {
+          query = { id: parseInt(carId) };
+        }
+
+        const result = await carCollection.findOne(query);
+        
+        if (result) {
+          res.send(result);
+        } else {
+          res.status(404).send({ message: "Car not found with this ID" });
+        }
+      } catch (error) {
+        console.error("Error fetching single car:", error);
+        res.status(500).send({ message: "Error fetching single car data", error });
+      }
+    });
+
+ 
 
   } catch (error) {
     console.error("MongoDB Connection Error:", error);
