@@ -257,6 +257,76 @@ async function run() {
       }
     });
 
+       // গাড়ি এডিট বা ডাটা আপডেট এন্ডপয়েন্ট
+    app.put('/api/cars/:id', async (req, res) => {
+      try {
+        const carId = req.params.id;
+        if (!ObjectId.isValid(carId)) {
+          return res.status(400).send({ message: "Invalid Car ID format" });
+        }
+
+        const updatedData = req.body;
+        delete updatedData._id; 
+
+        const query = { _id: new ObjectId(carId) };
+        
+        const updateDoc = {
+          $set: {
+            carName: updatedData.carName || updatedData.name,
+            price: updatedData.price || updatedData.dailyPrice,
+            description: updatedData.description,
+            availability: updatedData.availability,
+            imageURL: updatedData.imageURL || updatedData.image,
+            type: updatedData.type,
+            location: updatedData.location,
+          }
+        };
+
+        const result = await carCollection.updateOne(query, updateDoc);
+        
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Car not found to update" });
+        }
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating car:", error);
+        res.status(500).send({ message: "Error updating car data", error });
+      }
+    });
+
+  
+    // Booking এবং $inc ব্যবহার করে booking_count বৃদ্ধি
+  
+    app.post('/api/bookings', async (req, res) => {
+      try {
+        const bookingData = req.body;
+        
+        const bookingResult = await bookingCollection.insertOne({
+          ...bookingData,
+          bookedAt: new Date()
+        });
+
+        if (bookingData.carId && ObjectId.isValid(bookingData.carId)) {
+          await carCollection.updateOne(
+            { _id: new ObjectId(bookingData.carId) },
+            { 
+              $set: { availability: "Unavailable" },
+              $inc: { booking_count: 1 } 
+            }
+          );
+        }
+
+        res.status(201).send({ 
+          message: "Booking successful and booking count increased! 🎫🎉", 
+          bookingId: bookingResult.insertedId 
+        });
+      } catch (error) {
+        console.error("Error creating booking:", error);
+        res.status(500).send({ message: "Error processing booking", error });
+      }
+    });
+
+
  
 
   } catch (error) {
