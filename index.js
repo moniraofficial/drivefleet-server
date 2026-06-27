@@ -613,14 +613,8 @@ const uri = process.env.MONGODB_URI;
 const app = express();
 const PORT = process.env.PORT || 5000; 
 
-// 🛠️ Middleware কনফিগারেশন
-app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://drivefleet.vercel.app" 
-  ], 
-  credentials: true 
-}));
+//  Middleware কনফিগারেশন
+app.use(cors());
 app.use(express.json());
 
 const client = new MongoClient(uri, {
@@ -635,14 +629,14 @@ async function run() {
   try {
     // ⚠️ Vercel (Serverless)-এর জন্য চিরস্থায়ী client.connect() কমেন্ট আউট রাখাই বেস্ট প্র্যাকটিস
     // await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const database = client.db("drivefleet");
     const carCollection = database.collection("cars");
     const bookingCollection = database.collection("bookings"); 
 
-    // 🚗 গাড়ি অ্যাড করার এন্ডপয়েন্ট
+    //  গাড়ি অ্যাড করার এন্ডপয়েন্ট
     app.post('/api/cars', async (req, res) => {
       try {
         const carData = req.body;
@@ -660,7 +654,7 @@ async function run() {
       }
     });
 
-    // 🔍 Search (by Car Name) and Filter (by Type) + Optional Sort
+    //  Search (by Car Name) and Filter (by Type) + Optional Sort
     app.get('/api/cars', async (req, res) => {
       try {
         const { email, ownerEmail, search, type, sortBy } = req.query;
@@ -691,7 +685,7 @@ async function run() {
       }
     });
 
-    // 🆔 সিঙ্গেল গাড়ির ডাটা রিড করা
+    // সিঙ্গেল গাড়ির ডাটা রিড করা
     app.get('/api/cars/:id', async (req, res) => {
       try {
         const carId = req.params.id; 
@@ -716,7 +710,7 @@ async function run() {
       }
     });
 
-    // 📝 গাড়ি এডিট বা ডাটা আপডেট এন্ডপয়েন্ট
+    //  গাড়ি এডিট বা ডাটা আপডেট এন্ডপয়েন্ট
     app.put('/api/cars/:id', async (req, res) => {
       try {
         const carId = req.params.id;
@@ -754,7 +748,7 @@ async function run() {
       }
     });
 
-    // 🎫 Booking এবং $inc ব্যবহার করে booking_count বৃদ্ধি
+    //  Booking এবং $inc ব্যবহার করে booking_count বৃদ্ধি
     app.post('/api/bookings', async (req, res) => {
       try {
         const bookingData = req.body;
@@ -784,7 +778,7 @@ async function run() {
       }
     });
 
-    // 🗃️ বুকিং লিস্ট রিড করা
+    // বুকিং লিস্ট রিড করা
     app.get('/api/bookings', async (req, res) => {
       try {
         const email = req.query.email;
@@ -801,7 +795,7 @@ async function run() {
       }
     });
 
-    // 🗑️ গাড়ি ডিলিট করার এন্ডপয়েন্ট
+    //  গাড়ি ডিলিট করার এন্ডপয়েন্ট
     app.delete('/api/cars/:id', async (req, res) => {
       try {
         const carId = req.params.id;
@@ -834,12 +828,12 @@ app.get('/', (req, res) => {
   res.send("DriveFleet Server is running perfectly! 🚀")
 });
 
-// 🛠️ ফিক্স: শুধুমাত্র লোকাল এনভায়রনমেন্টে app.listen চলবে
+
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`Server is running locally on port ${PORT}`);
   });
 }
 
-// ⚠️ VERCEL REQUIREMENT: অ্যাপ অবজেক্টটি অবশ্যই এক্সপোর্ট করতে হবে
+
 module.exports = app;
